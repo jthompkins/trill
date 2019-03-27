@@ -1,0 +1,16 @@
+<div id="test" v-cloak>
+  <div class="container" v-if="!cloudSuccess">
+    <h1 class="text-center">Test Page</h1>
+    <div class="test-form">
+      <hr/>
+      <ajax-form action="test" :syncing.sync="syncing" :cloud-error.sync="cloudError" @submitted="test()" :handle-parsing="handleParsingForm">
+        <div class="form-group">
+          <label for="full-name">Test label</label>
+          <input class="form-control" id="full-name" type="text"  :class="[formErrors.fullName ? 'is-invalid' : '']" v-model.trim="formData.fullName" placeholder="Sturgis P. Sturgeon" autocomplete="name" focus-first>
+        </div>
+      </ajax-form>
+      <p class="text-center">Have an account? <a href="/login">Sign in</a></p>
+    </div>
+  </div>
+</div>
+<%- /* Expose locals as `window.SAILS_LOCALS` :: */ exposeLocalsToBrowser() %>
