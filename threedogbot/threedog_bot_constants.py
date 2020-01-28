@@ -9,7 +9,8 @@ YOUTUBE_SEARCH = "https://www.youtube.com/results?search_query="
 
 NO_VOICE_CHANNEL = 'You are not in the voice channel!'
 
-THREEDOG_CODE = 'NDIwNDc3Njg2MTY3NzY0OTky.DZoG0w.c9JKxYwiRVPVcqtGUCYVVkxyTmU'
+#User has to obtain this authentication code from Discord
+THREEDOG_CODE = ''
 
 HELP_MESSAGE = 'List of available commands:'\
 				'\n$music - list available songs'\
