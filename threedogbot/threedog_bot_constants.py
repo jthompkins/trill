@@ -1,4 +1,7 @@
 #File for storing constant variables
+
+import os
+
 MAX_VOL = 1.99
 MIN_VOL = 0.20
 VOL_INC = 0.20
@@ -9,8 +12,8 @@ YOUTUBE_SEARCH = "https://www.youtube.com/results?search_query="
 
 NO_VOICE_CHANNEL = 'You are not in the voice channel!'
 
-#User has to obtain this authentication code from Discord
-THREEDOG_CODE = ''
+#User has to obtain this authentication code from Discord. Set as environment variable
+THREEDOG_CODE = os.getenv('THREEDOGCODE')
 
 HELP_MESSAGE = 'List of available commands:'\
 				'\n$music - list available songs'\
