@@ -32,6 +32,8 @@ class ThreeDog():
 	
 	vc = None
 	
+	radio_on = False
+	
 	voicelines_dir = "./voicelines/"
 	records_dir = "./records/"
 	
@@ -60,7 +62,6 @@ class ThreeDog():
 			mesg = message.content.lower()[len(ThreeDog.bot.command_prefix):]
 			print("Command received: "+command+"\nfrom user: "+str(message.author)+"\n")
 			
-			#await message.channel.send("Hello there!")
 			if mesg.startswith('radio'):
 				await ThreeDog.radio_action(message)
 			
@@ -79,7 +80,8 @@ class ThreeDog():
 			elif mesg.startswith('logout'):
 				await ThreeDog.logout_action(message)
 			
-			
+			else:
+				await message.channel.send("Sorry pal. I didn't understand that command.")
 		
 		#Ignore all messages without the prefix.
 		else:
@@ -104,6 +106,7 @@ class ThreeDog():
 		
 		voiceline = str(ThreeDog.item_shuffle(ThreeDog.voicelines_dir, '.mp3')[0])
 		ThreeDog.vc.play(discord.FFmpegPCMAudio(voiceline), after=lambda e: print("Finished playing voice line."))
+		
 		print("Playing voice line: " + voiceline)
 		while ThreeDog.vc.is_playing():
 			time.sleep(1)
@@ -113,9 +116,32 @@ class ThreeDog():
 		print("Playing song: " + song)
 		await message.channel.send("Now playing:	"+ song.replace('./records', '').replace('\\','').replace('.mp3', '') )
 		
-		#while ThreeDog.vc.is_playing():
-		#	time.sleep(1)
 		
+
+		#Spin new thread to keep radio functions going. Pass the asyncio event loop to allow Three Dog to send messages.
+		ThreeDog.radio_on = True
+		t = threading.Thread(target=ThreeDog.radio_thread_action, args=(ThreeDog, message, asyncio.get_event_loop()))
+		t.start()
+		
+	#Method to keep the radio functions going. Ran in a separate thread from radio_action.
+	def radio_thread_action(self, message, loop):
+		while self.radio_on:
+			while ThreeDog.vc.is_playing():
+				time.sleep(1)
+			
+			voiceline = str(ThreeDog.item_shuffle(ThreeDog.voicelines_dir, '.mp3')[0])
+			ThreeDog.vc.play(discord.FFmpegPCMAudio(voiceline), after=lambda e: print("Finished playing voice line."))
+			
+			print("Playing voice line: " + voiceline)
+			while ThreeDog.vc.is_playing():
+				time.sleep(1)
+		
+			song = str(ThreeDog.item_shuffle(ThreeDog.records_dir, '.mp3')[0])
+			ThreeDog.vc.play(discord.FFmpegPCMAudio(song), after=lambda e: print("Finished playing song."))
+			print("Playing song: " + song)
+			
+			#Create a task in the asyncio loop to send a message to the channel.
+			loop.create_task( message.channel.send("Now playing:	"+ song.replace('./records', '').replace('\\','').replace('.mp3', '') ) )
 		
 	async def pause_action(message):
 		if ThreeDog.vc is  not None:
@@ -125,6 +151,7 @@ class ThreeDog():
 		if ThreeDog.vc is  not None:
 			ThreeDog.vc.stop()
 			await message.channel.send("Stopping the music.")
+			ThreeDog.radio_on = False
 	async def resume_action(message):
 		if ThreeDog.vc is  not None:
 			ThreeDog.vc.resume()
