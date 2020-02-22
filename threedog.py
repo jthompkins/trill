@@ -73,6 +73,9 @@ class ThreeDog():
 				
 			elif mesg.startswith('resume'):
 				await ThreeDog.resume_action(message)
+				
+			elif mesg.startswith('next'):
+				await ThreeDog.next_action(message)
 			
 			elif  mesg.startswith('stock'):
 				await ThreeDog.stock_action(message,mesg)
@@ -156,6 +159,11 @@ class ThreeDog():
 		if ThreeDog.vc is  not None:
 			ThreeDog.vc.resume()
 			await message.channel.send("Resuming music.")
+			
+	async def next_action(message):
+		if ThreeDog.vc is  not None:
+			ThreeDog.vc.stop()
+			await message.channel.send("Skipping this track.")
 			
 	#Method to read in a stock symbol and return the current price of that stock.
 	async def stock_action(message, mesg):
