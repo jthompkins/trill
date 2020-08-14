@@ -104,6 +104,18 @@ class ThreeDog():
 	
 		'''
 		
+		if message.content == '!radio':
+			radio_dir = ThreeDog.records_dir + 'fallout'
+		else:
+			radio_playlist = message.content[len(ThreeDog.bot.command_prefix):].split('radio', 1)[1].replace(' ','')
+			if os.path.isdir(ThreeDog.records_dir + radio_playlist):
+				radio_dir = ThreeDog.records_dir + radio_playlist
+			else:
+				await message.channel.send("Invalid radio setting!")
+				return
+		
+		
+		
 		if ThreeDog.radio_on:
 			await message.channel.send("Radio is already playing!")
 			return
@@ -121,22 +133,24 @@ class ThreeDog():
 		print("Playing voice line: " + voiceline)
 		while ThreeDog.vc.is_playing():
 			time.sleep(1)
+			
+		
 
-		song = str(ThreeDog.item_shuffle(ThreeDog.records_dir, '.mp3')[0])
+		song = str(ThreeDog.item_shuffle(radio_dir, '.mp3')[0])
 		ThreeDog.vc.play(discord.FFmpegPCMAudio(song), after=lambda e: print("Finished playing song."))
 		print("Playing song: " + song)
-		await message.channel.send("Now playing:	"+ song.replace('./records', '').replace('\\','').replace('.mp3', '') )
+		await message.channel.send("Now playing:	"+ song.replace(radio_dir, '').replace('\\','').replace('.mp3', '') )
 		
 		
 
 		#Spin new thread to keep radio functions going. Pass the asyncio event loop to allow Three Dog to send messages.
 		ThreeDog.radio_on = True
-		t = threading.Thread(target=ThreeDog.radio_thread_action, args=(ThreeDog, message, asyncio.get_event_loop()))
+		t = threading.Thread(target=ThreeDog.radio_thread_action, args=(ThreeDog, message, radio_dir, asyncio.get_event_loop()))
 		t.start()
 		
 	
 	#Method to keep the radio functions going. Ran in a separate thread from radio_action.
-	def radio_thread_action(self, message, loop):
+	def radio_thread_action(self, message, radio_dir, loop):
 		while self.radio_on:
 			while ThreeDog.vc.is_playing():
 				time.sleep(1)
@@ -148,12 +162,12 @@ class ThreeDog():
 			while ThreeDog.vc.is_playing():
 				time.sleep(1)
 		
-			song = str(ThreeDog.item_shuffle(ThreeDog.records_dir, '.mp3')[0])
+			song = str(ThreeDog.item_shuffle(radio_dir, '.mp3')[0])
 			ThreeDog.vc.play(discord.FFmpegPCMAudio(song), after=lambda e: print("Finished playing song."))
 			print("Playing song: " + song)
 			
 			#Create a task in the asyncio loop to send a message to the channel.
-			loop.create_task( message.channel.send("Now playing:	"+ song.replace('./records', '').replace('\\','').replace('.mp3', '') ) )
+			loop.create_task( message.channel.send("Now playing:	"+ song.replace(radio_dir, '').replace('\\','').replace('.mp3', '') ) )
 		
 		
 	#Method for Three Dog to play a song.
@@ -172,10 +186,6 @@ class ThreeDog():
 			source_file = mesg
 			if ThreeDog.vc is None:
 				ThreeDog.vc = await channel.connect()
-			#ThreeDog.vc.play(discord.FFmpegP(source_file)
-			#dl_file = await ytdlsource.YTDLSource.download(source_file)
-			
-			#print('./songs/' + dl_file)
 
 			player = await ytdlsource.YTDLSource.from_url(source_file, stream=False)
 			ThreeDog.vc.play(player, after=lambda e: print("Finished playing song."))
@@ -193,7 +203,7 @@ class ThreeDog():
 	async def stop_action(message):
 		if ThreeDog.vc is  not None:
 			ThreeDog.vc.stop()
-			await message.channel.send("Stopping the music.")
+			await message.channel.send("Stopping the current song.")
 			ThreeDog.radio_on = False
 			await ThreeDog.client.change_presence(status=discord.Status.idle, activity=None)
 	async def resume_action(message):
@@ -205,31 +215,7 @@ class ThreeDog():
 		if ThreeDog.vc is  not None:
 			ThreeDog.vc.stop()
 			await message.channel.send("Skipping this track.")
-			
-	#Method to read in a stock symbol and return the current price of that stock.
-	async def stock_action(message, mesg):
-		stock = mesg.split('stock', 1)[1].replace(' ','').upper()
-		url = 'https://nasdaq.com/market-activity/stocks/'+stock
-		try:
-			print(url)
-			f = urllib2.urlopen(url)
-		except urllib.error.HTTPError as error:
-			print(error)
-			return
-		f_list = str(f.read())
-
-		stock_element = '<div class="qwidget-symbol">'+stock+'&nbsp;</div>'
-	
-		try:
-			price_element = '<span class="symbol-page-header__pricing-price">'
-			price_end = '</span>'
-			price_found = f_list.split(price_element)[1].split(price_end)[0]
-		
-			stock_price = price_found
-			await message.channel.send(stock +' is currently trading at '+stock_price)
-		except IndexError:
-			await message.channel.send('Could not find '+stock)
-		
+				
 	#Method for logging the bot client out.
 	async def logout_action(message):
 		print("Logging off")
