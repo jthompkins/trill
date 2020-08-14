@@ -21,12 +21,13 @@ import urllib
 import urllib.request as urllib2
 import youtube_dl
 from bs4 import BeautifulSoup
+import ytdlsource
 
 
 class ThreeDog():
 
 	#Command prefix. Messages in discord that start with this character will be recognized by Three Dog.
-	command_prefix = "$"
+	command_prefix = "!"
 	client = discord.Client()
 	bot = Bot(command_prefix = command_prefix)
 	
@@ -37,7 +38,6 @@ class ThreeDog():
 	voicelines_dir = "./voicelines/"
 	records_dir = "./records/"
 	
-
 	def __init__(self):
 		
 
@@ -64,6 +64,9 @@ class ThreeDog():
 			
 			if mesg.startswith('radio'):
 				await ThreeDog.radio_action(message)
+				
+			elif mesg.startswith('play'):
+				await ThreeDog.play_action(message)
 			
 			elif mesg.startswith('pause'):
 				await ThreeDog.pause_action(message)
@@ -101,6 +104,11 @@ class ThreeDog():
 	
 		'''
 		
+		if ThreeDog.radio_on:
+			await message.channel.send("Radio is already playing!")
+			return
+			
+		await ThreeDog.client.change_presence(status=discord.Status.online, activity=discord.Game(name='Galaxy News Radio'))
 		channel = message.author.voice.channel
 		if ThreeDog.vc is None or not ThreeDog.vc.is_connected():
 			ThreeDog.vc = await channel.connect()
@@ -126,6 +134,25 @@ class ThreeDog():
 		t = threading.Thread(target=ThreeDog.radio_thread_action, args=(ThreeDog, message, asyncio.get_event_loop()))
 		t.start()
 		
+	#Method for Three Dog to play a song.
+	
+	async def play_action(message):
+	
+		
+		channel = message.author.voice.channel
+		mesg = message.content[len(ThreeDog.bot.command_prefix):].split('play', 1)[1]
+
+		#Check if youtube url was passed.
+		if 'youtube.com/watch' in mesg:
+			source_file = mesg
+			ThreeDog.vc = await channel.connect()
+			#ThreeDog.vc.play(discord.FFmpegP(source_file)
+			player = await ytdlsource.YTDLSource.from_url(source_file, stream=True)
+			ThreeDog.vc.play(player, after=lambda e: print("Finished playing song."))
+		
+	
+	
+	
 	#Method to keep the radio functions going. Ran in a separate thread from radio_action.
 	def radio_thread_action(self, message, loop):
 		while self.radio_on:
@@ -155,6 +182,7 @@ class ThreeDog():
 			ThreeDog.vc.stop()
 			await message.channel.send("Stopping the music.")
 			ThreeDog.radio_on = False
+			await ThreeDog.client.change_presence(status=discord.Status.idle, activity=None)
 	async def resume_action(message):
 		if ThreeDog.vc is  not None:
 			ThreeDog.vc.resume()
@@ -168,7 +196,7 @@ class ThreeDog():
 	#Method to read in a stock symbol and return the current price of that stock.
 	async def stock_action(message, mesg):
 		stock = mesg.split('stock', 1)[1].replace(' ','').upper()
-		url = 'https://old.nasdaq.com/symbol/'+stock
+		url = 'https://nasdaq.com/market-activity/stocks/'+stock
 		try:
 			print(url)
 			f = urllib2.urlopen(url)
@@ -176,11 +204,12 @@ class ThreeDog():
 			print(error)
 			return
 		f_list = str(f.read())
+
 		stock_element = '<div class="qwidget-symbol">'+stock+'&nbsp;</div>'
 	
 		try:
-			price_element = '<div id="qwidget_lastsale" class="qwidget-dollar">'
-			price_end = '</div>'
+			price_element = '<span class="symbol-page-header__pricing-price">'
+			price_end = '</span>'
 			price_found = f_list.split(price_element)[1].split(price_end)[0]
 		
 			stock_price = price_found
@@ -207,6 +236,7 @@ class ThreeDog():
 
 if __name__ == "__main__":
 	try:
+		print(discord.__version__)
 		dj = ThreeDog()
 		dj.run()
 	except KeyboardInterrupt:
