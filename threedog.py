@@ -36,7 +36,8 @@ class ThreeDog():
 	radio_on = False
 	
 	voicelines_dir = "./voicelines/"
-	records_dir = "./records/"
+	records_dir = "./songs/"
+	songs_dir = "./songs/"
 	
 	def __init__(self):
 		
@@ -95,7 +96,6 @@ class ThreeDog():
 			
 			
 	#Method for Three Dog to DJ Galaxy News Radio
-	
 	async def radio_action(message):
 		'''
 		Structure: Play a voice line. Play 2-3 songs. Play a voice line.
@@ -134,24 +134,6 @@ class ThreeDog():
 		t = threading.Thread(target=ThreeDog.radio_thread_action, args=(ThreeDog, message, asyncio.get_event_loop()))
 		t.start()
 		
-	#Method for Three Dog to play a song.
-	
-	async def play_action(message):
-	
-		
-		channel = message.author.voice.channel
-		mesg = message.content[len(ThreeDog.bot.command_prefix):].split('play', 1)[1]
-
-		#Check if youtube url was passed.
-		if 'youtube.com/watch' in mesg:
-			source_file = mesg
-			ThreeDog.vc = await channel.connect()
-			#ThreeDog.vc.play(discord.FFmpegP(source_file)
-			player = await ytdlsource.YTDLSource.from_url(source_file, stream=True)
-			ThreeDog.vc.play(player, after=lambda e: print("Finished playing song."))
-		
-	
-	
 	
 	#Method to keep the radio functions going. Ran in a separate thread from radio_action.
 	def radio_thread_action(self, message, loop):
@@ -172,6 +154,37 @@ class ThreeDog():
 			
 			#Create a task in the asyncio loop to send a message to the channel.
 			loop.create_task( message.channel.send("Now playing:	"+ song.replace('./records', '').replace('\\','').replace('.mp3', '') ) )
+		
+		
+	#Method for Three Dog to play a song.
+	async def play_action(message):
+	
+		if ThreeDog.vc is not None:
+			await ThreeDog.stop_action(message)
+		
+		channel = message.author.voice.channel
+		mesg = message.content[len(ThreeDog.bot.command_prefix):].split('play', 1)[1]
+		
+		
+
+		#Check if youtube url was passed.
+		if 'youtube.com/watch' in mesg:
+			source_file = mesg
+			if ThreeDog.vc is None:
+				ThreeDog.vc = await channel.connect()
+			#ThreeDog.vc.play(discord.FFmpegP(source_file)
+			#dl_file = await ytdlsource.YTDLSource.download(source_file)
+			
+			#print('./songs/' + dl_file)
+
+			player = await ytdlsource.YTDLSource.from_url(source_file, stream=False)
+			ThreeDog.vc.play(player, after=lambda e: print("Finished playing song."))
+
+			
+			await message.channel.send("Now playing audio from:	" + mesg)
+			
+			
+			
 		
 	async def pause_action(message):
 		if ThreeDog.vc is  not None:
@@ -236,7 +249,6 @@ class ThreeDog():
 
 if __name__ == "__main__":
 	try:
-		print(discord.__version__)
 		dj = ThreeDog()
 		dj.run()
 	except KeyboardInterrupt:
