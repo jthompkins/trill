@@ -39,6 +39,8 @@ class ThreeDog():
 	records_dir = "./songs/"
 	songs_dir = "./songs/"
 	
+	current_song = "Nothing"
+	
 	def __init__(self):
 		
 
@@ -66,6 +68,9 @@ class ThreeDog():
 			if mesg.startswith('radio'):
 				await ThreeDog.radio_action(message)
 				
+			elif mesg.startswith('playing'):
+				await ThreeDog.playing_action(message)
+				
 			elif mesg.startswith('play'):
 				await ThreeDog.play_action(message)
 			
@@ -80,12 +85,12 @@ class ThreeDog():
 				
 			elif mesg.startswith('next'):
 				await ThreeDog.next_action(message)
-			
-			elif  mesg.startswith('stock'):
-				await ThreeDog.stock_action(message,mesg)
-			
+				
 			elif mesg.startswith('logout'):
 				await ThreeDog.logout_action(message)
+				
+			elif mesg.startswith('help'):
+				await ThreeDog.help_action(message)
 			
 			else:
 				await message.channel.send("Sorry pal. I didn't understand that command.")
@@ -94,6 +99,10 @@ class ThreeDog():
 		else:
 			pass
 			
+			
+	async def playing_action(message):
+		await message.channel.send("Currently playing: " + str(ThreeDog.current_song))
+		
 			
 	#Method for Three Dog to DJ Galaxy News Radio
 	async def radio_action(message):
@@ -114,8 +123,6 @@ class ThreeDog():
 				await message.channel.send("Invalid radio setting!")
 				return
 		
-		
-		
 		if ThreeDog.radio_on:
 			await message.channel.send("Radio is already playing!")
 			return
@@ -128,19 +135,20 @@ class ThreeDog():
 			await ThreeDog.vc.move_to(channel)
 		
 		voiceline = str(ThreeDog.item_shuffle(ThreeDog.voicelines_dir, '.mp3')[0])
+		ThreeDog.current_song = "Currently in between songs"
 		ThreeDog.vc.play(discord.FFmpegPCMAudio(voiceline), after=lambda e: print("Finished playing voice line."))
 		
 		print("Playing voice line: " + voiceline)
 		while ThreeDog.vc.is_playing():
 			time.sleep(1)
 			
-		
-
 		song = str(ThreeDog.item_shuffle(radio_dir, '.mp3')[0])
 		ThreeDog.vc.play(discord.FFmpegPCMAudio(song), after=lambda e: print("Finished playing song."))
 		print("Playing song: " + song)
-		await message.channel.send("Now playing:	"+ song.replace(radio_dir, '').replace('\\','').replace('.mp3', '') )
+		await message.channel.send("Playing radio playlist: "+str(radio_dir))
 		
+		#await message.channel.send("Now playing:	"+ song.replace(radio_dir, '').replace('\\','').replace('.mp3', '') )
+		ThreeDog.current_song = song.replace(radio_dir, '').replace('\\','').replace('.mp3', '')
 		
 
 		#Spin new thread to keep radio functions going. Pass the asyncio event loop to allow Three Dog to send messages.
@@ -156,6 +164,7 @@ class ThreeDog():
 				time.sleep(1)
 			
 			voiceline = str(ThreeDog.item_shuffle(ThreeDog.voicelines_dir, '.mp3')[0])
+			ThreeDog.current_song = "Currently in between songs"
 			ThreeDog.vc.play(discord.FFmpegPCMAudio(voiceline), after=lambda e: print("Finished playing voice line."))
 			
 			print("Playing voice line: " + voiceline)
@@ -167,31 +176,30 @@ class ThreeDog():
 			print("Playing song: " + song)
 			
 			#Create a task in the asyncio loop to send a message to the channel.
-			loop.create_task( message.channel.send("Now playing:	"+ song.replace(radio_dir, '').replace('\\','').replace('.mp3', '') ) )
-		
+			#loop.create_task( message.channel.send("Now playing:	"+ song.replace(radio_dir, '').replace('\\','').replace('.mp3', '') ) )
+			ThreeDog.current_song = song.replace(radio_dir, '').replace('\\','').replace('.mp3', '')
 		
 	#Method for Three Dog to play a song.
 	async def play_action(message):
 	
 		if ThreeDog.vc is not None:
 			await ThreeDog.stop_action(message)
+	
 		
 		channel = message.author.voice.channel
 		mesg = message.content[len(ThreeDog.bot.command_prefix):].split('play', 1)[1]
 		
-		
+		print("\nPlaying audio from: " + mesg)
 
 		#Check if youtube url was passed.
 		if 'youtube.com/watch' in mesg:
 			source_file = mesg
 			if ThreeDog.vc is None:
 				ThreeDog.vc = await channel.connect()
-
 			player = await ytdlsource.YTDLSource.from_url(source_file, stream=False)
 			ThreeDog.vc.play(player, after=lambda e: print("Finished playing song."))
-
-			
 			await message.channel.send("Now playing audio from:	" + mesg)
+			await ThreeDog.client.change_presence(status=discord.Status.online, activity=discord.Game(name='Galaxy News Radio'))
 			
 			
 			
@@ -203,7 +211,7 @@ class ThreeDog():
 	async def stop_action(message):
 		if ThreeDog.vc is  not None:
 			ThreeDog.vc.stop()
-			await message.channel.send("Stopping the current song.")
+			#await message.channel.send("Stopping the current song.")
 			ThreeDog.radio_on = False
 			await ThreeDog.client.change_presence(status=discord.Status.idle, activity=None)
 	async def resume_action(message):
@@ -221,6 +229,10 @@ class ThreeDog():
 		print("Logging off")
 		await ThreeDog.bot.close()
 		await ThreeDog.client.close()
+		
+	async def help_action(message):
+		if ThreeDog.vc is  not None:
+			await message.channel.send(threedog_bot_constants.HELP_MESSAGE) 
 		
 		
 	#Returns a random item in the provided directory
