@@ -40,19 +40,15 @@ class YTDLSource(discord.PCMVolumeTransformer):
 		loop = loop or asyncio.get_event_loop()
 		data = await loop.run_in_executor(None, lambda: YTDLSource.ytdl.extract_info(url, download=not stream))
 
-		if 'entries' in data:
+		if 'entries' in data and len(data['entries']) > 0:
             # take first item from a playlist
 			data = data['entries'][0]
 
 		filename = data['url'] if stream else YTDLSource.ytdl.prepare_filename(data)
 		filename = filename.replace('.webm','.mp3')
+		filename = filename.replace('.m4a', '.mp3')
+
 		return cls(discord.FFmpegPCMAudio(filename, **YTDLSource.ffmpeg_options), data=data)
-		
-	async def download(url):
-		loop = asyncio.get_event_loop()
-		info = await loop.run_in_executor(None, lambda: YTDLSource.ytdl.extract_info(url, download=False))
-		filename = YTDLSource.ytdl.prepare_filename(info)
-		YTDLSource.ytdl.download([url])
-		return filename
+
 		
 	
