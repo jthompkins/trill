@@ -27,19 +27,22 @@ import ytdlsource
 class ThreeDog():
 
 	#Command prefix. Messages in discord that start with this character will be recognized by Three Dog.
+
 	command_prefix = "!"
 	client = discord.Client()
 	bot = Bot(command_prefix = command_prefix)
-	
+	#The voice channel the bot will use.
 	vc = None
-	
+	#Boolean to keep track of whether the radio should be running or not
 	radio_on = False
-	
+	#Directory that contains the Three Dog voice line .mp3 files
 	voicelines_dir = "./voicelines/"
+
 	records_dir = "./songs/"
 	songs_dir = "./songs/"
 	
 	current_song = "Nothing"
+
 	
 	def __init__(self):
 		
@@ -52,19 +55,31 @@ class ThreeDog():
 		print("Starting bot threedog client")
 		self.client.run(self.threedog_code)
 
-	''' Three Dog actions'''
+	''' Three Dog actions
 
+	async functions that are called with the await keyword.
+
+
+	'''
+	
+	#Function that is called when the bot is ready to process commands.
 	@client.event
 	async def on_ready():
 		print("Three Dog is ready.")
 	
+	#Function that is called when a message is sent on Discord in a channel Three Dog can read.
 	@client.event
 	async def on_message(message):
 		if message.content.startswith(ThreeDog.bot.command_prefix):
 			command = message.content[len(ThreeDog.bot.command_prefix):]
 			mesg = message.content.lower()[len(ThreeDog.bot.command_prefix):]
 			print("Command received: "+command+"\nfrom user: "+str(message.author)+"\n")
-			
+
+			'''
+			If elses for various commands the bot recognizes. This could potentially be changed to a psuedo switch/case with a dictionary if processing speed becomes an issue.
+
+			'''			
+
 			if mesg.startswith('radio'):
 				await ThreeDog.radio_action(message)
 				
@@ -235,13 +250,13 @@ class ThreeDog():
 			await message.channel.send(threedog_bot_constants.HELP_MESSAGE) 
 		
 		
-	#Returns a random item in the provided directory
+	#Returns a shuffled list of items found in directory dir with extension ext
 	def item_shuffle(dir, ext):
 		item_list = glob.glob(dir + '/*' + ext)
 		list_len = len(item_list)
 		rand = randint(0, list_len - 1)
+		#Function from the random module
 		shuffle(item_list)
-		#
 		return item_list
 		
 
