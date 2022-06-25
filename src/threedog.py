@@ -13,6 +13,7 @@ import os
 from pathlib import Path
 from random import randint
 from random import shuffle
+from song_queue import SongQueue
 import sys
 import threading
 import threedog_bot_constants
@@ -27,59 +28,44 @@ import ytdlsource
 class ThreeDog():
 
 	#Command prefix. Messages in discord that start with this character will be recognized by Three Dog.
-
-	command_prefix = "!"
-	client = discord.Client()
-	bot = Bot(command_prefix = command_prefix)
-	#The voice channel the bot will use.
-	vc = None
-	#Boolean to keep track of whether the radio should be running or not
-	radio_on = False
-	#Directory that contains the Three Dog voice line .mp3 files
-	voicelines_dir = "./voicelines/"
-
-	records_dir = "./songs/"
-	songs_dir = "./songs/"
+	COMMAND_PREFIX = "!"
+	ROOT_DIR = ".."
+	VOICELINES_DIR = "$ROOT_DIR/voicelines/"
+	RECORDS_DIR = "$ROOT_DIR/songs/"
+	SONGS_DIR = "$ROOT_DIR/songs/"
 	
-	current_song = "Nothing"
-
+	client = discord.Client()
 	
 	def __init__(self):
-		
-
 		print("Retrieving code from environment variable THREEDOGCODE")
 		self.threedog_code = threedog_bot_constants.THREEDOG_CODE
 		if self.threedog_code is None:
-			sys.exit("No bot code was defined for Three Dog. This OAuth code needs to be set as an environment variable.")
+			sys.exit("No bot code was defined for Three Dog. This OAuth code (THREEDOG_CODE) needs to be set as an environment variable.")
+		
+		self.vc = None
+		self.radio_on = False
+		self.current_song = "Nothing"
+		
+		self.bot = Bot(command_prefix = ThreeDog.COMMAND_PREFIX)
+		
+		
 	def run(self):
 		print("Starting bot threedog client")
 		self.client.run(self.threedog_code)
 
-	''' Three Dog actions
+	''' Three Dog actions'''
 
-	async functions that are called with the await keyword.
-
-
-	'''
-	
-	#Function that is called when the bot is ready to process commands.
 	@client.event
 	async def on_ready():
 		print("Three Dog is ready.")
 	
-	#Function that is called when a message is sent on Discord in a channel Three Dog can read.
 	@client.event
 	async def on_message(message):
-		if message.content.startswith(ThreeDog.bot.command_prefix):
-			command = message.content[len(ThreeDog.bot.command_prefix):]
-			mesg = message.content.lower()[len(ThreeDog.bot.command_prefix):]
+		if message.content.startswith(ThreeDog.bot.COMMAND_PREFIX):
+			command = message.content[len(ThreeDog.bot.COMMAND_PREFIX):]
+			mesg = message.content.lower()[len(ThreeDog.bot.COMMAND_PREFIX):]
 			print("Command received: "+command+"\nfrom user: "+str(message.author)+"\n")
-
-			'''
-			If elses for various commands the bot recognizes. This could potentially be changed to a psuedo switch/case with a dictionary if processing speed becomes an issue.
-
-			'''			
-
+			
 			if mesg.startswith('radio'):
 				await ThreeDog.radio_action(message)
 				
@@ -129,11 +115,11 @@ class ThreeDog():
 		'''
 		
 		if message.content == '!radio':
-			radio_dir = ThreeDog.records_dir + 'fallout'
+			radio_dir = ThreeDog.RECORDS_DIR + 'fallout'
 		else:
-			radio_playlist = message.content[len(ThreeDog.bot.command_prefix):].split('radio', 1)[1].replace(' ','')
-			if os.path.isdir(ThreeDog.records_dir + radio_playlist):
-				radio_dir = ThreeDog.records_dir + radio_playlist
+			radio_playlist = message.content[len(ThreeDog.bot.COMMAND_PREFIX):].split('radio', 1)[1].replace(' ','')
+			if os.path.isdir(ThreeDog.RECORDS_DIR + radio_playlist):
+				radio_dir = ThreeDog.RECORDS_DIR + radio_playlist
 			else:
 				await message.channel.send("Invalid radio setting!")
 				return
@@ -149,7 +135,7 @@ class ThreeDog():
 		elif ThreeDog.vc.is_connected():
 			await ThreeDog.vc.move_to(channel)
 		
-		voiceline = str(ThreeDog.item_shuffle(ThreeDog.voicelines_dir, '.mp3')[0])
+		voiceline = str(ThreeDog.item_shuffle(ThreeDog.VOICELINES_DIR, '.mp3')[0])
 		ThreeDog.current_song = "Currently in between songs"
 		ThreeDog.vc.play(discord.FFmpegPCMAudio(voiceline), after=lambda e: print("Finished playing voice line."))
 		
@@ -160,7 +146,7 @@ class ThreeDog():
 		song = str(ThreeDog.item_shuffle(radio_dir, '.mp3')[0])
 		ThreeDog.vc.play(discord.FFmpegPCMAudio(song), after=lambda e: print("Finished playing song."))
 		print("Playing song: " + song)
-		await message.channel.send("Playing radio playlist: "+str(radio_dir))
+		await message.channel.send("Playing radio playlist: "+str(radio_playlist))
 		
 		#await message.channel.send("Now playing:	"+ song.replace(radio_dir, '').replace('\\','').replace('.mp3', '') )
 		ThreeDog.current_song = song.replace(radio_dir, '').replace('\\','').replace('.mp3', '')
@@ -178,7 +164,7 @@ class ThreeDog():
 			while ThreeDog.vc.is_playing():
 				time.sleep(1)
 			
-			voiceline = str(ThreeDog.item_shuffle(ThreeDog.voicelines_dir, '.mp3')[0])
+			voiceline = str(ThreeDog.item_shuffle(ThreeDog.VOICELINES_DIR, '.mp3')[0])
 			ThreeDog.current_song = "Currently in between songs"
 			ThreeDog.vc.play(discord.FFmpegPCMAudio(voiceline), after=lambda e: print("Finished playing voice line."))
 			
@@ -202,12 +188,12 @@ class ThreeDog():
 	
 		
 		channel = message.author.voice.channel
-		mesg = message.content[len(ThreeDog.bot.command_prefix):].split('play', 1)[1]
+		mesg = message.content[len(ThreeDog.bot.COMMAND_PREFIX):].split('play', 1)[1]
 		
 		print("\nPlaying audio from: " + mesg)
 
 		#Check if youtube url was passed.
-		if 'youtube.com/watch' in mesg:
+		if 'youtube.com/watch' in mesg or True:
 			source_file = mesg
 			if ThreeDog.vc is None:
 				ThreeDog.vc = await channel.connect()
@@ -222,7 +208,7 @@ class ThreeDog():
 	async def pause_action(message):
 		if ThreeDog.vc is  not None:
 			ThreeDog.vc.pause()
-			await message.channel.send("Pausing the music.")
+			await message.channel.send("Music paused.")
 	async def stop_action(message):
 		if ThreeDog.vc is  not None:
 			ThreeDog.vc.stop()
@@ -232,7 +218,7 @@ class ThreeDog():
 	async def resume_action(message):
 		if ThreeDog.vc is  not None:
 			ThreeDog.vc.resume()
-			await message.channel.send("Resuming music.")
+			await message.channel.send("Music resumed.")
 			
 	async def next_action(message):
 		if ThreeDog.vc is  not None:
@@ -250,24 +236,13 @@ class ThreeDog():
 			await message.channel.send(threedog_bot_constants.HELP_MESSAGE) 
 		
 		
-	#Returns a shuffled list of items found in directory dir with extension ext
+	#Returns a random item in the provided directory
 	def item_shuffle(dir, ext):
 		item_list = glob.glob(dir + '/*' + ext)
 		list_len = len(item_list)
 		rand = randint(0, list_len - 1)
-		#Function from the random module
 		shuffle(item_list)
+		#
 		return item_list
-		
-
-if __name__ == "__main__":
-	try:
-		dj = ThreeDog()
-		dj.run()
-	except KeyboardInterrupt:
-		print("Keyboard interrupt detected.")
-		sys.exit(0)
-	#client = discord.Client()
-	#client.run(threedog_bot_constants.THREEDOG_CODE)
 	
 	
