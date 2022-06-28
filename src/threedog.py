@@ -96,7 +96,10 @@ class ThreeDog():
             
             elif mesg.startswith('queue'):
                 await ThreeDog.queue_action(message)
-            
+
+            elif mesg.startswith('clearqueue'):
+                await ThreeDog.clear_queue_action(message)
+
             else:
                 await message.channel.send("Sorry pal. I didn't understand that command.")
         
@@ -198,10 +201,16 @@ class ThreeDog():
 
         channel = message.author.voice.channel
         mesg = message.content[len(ThreeDog.bot.command_prefix):].split('play', 1)[1]
-        ThreeDog.song_queue.enqueue_song(mesg)
+        if mesg is not '':
+          ThreeDog.song_queue.enqueue_song(mesg)
+        elif mesg is '' and ThreeDog.song_queue.is_empty():
+          await message.channel.send("No song specified and nothing in the queue.")
+          return
+        else:
+          pass
         
         if ThreeDog.vc is not None and ThreeDog.vc.is_playing():
-            await message.channel.send("Song added to queue.")
+            await message.channel.send("Song added to queue: " + mesg)
             #player = ytdlsource.YTDLSource.from_url_noasync(mesg, stream=False)
             return
         
@@ -216,7 +225,7 @@ class ThreeDog():
           await ThreeDog.vc.move_to(channel)
           time.sleep(2)
         
-        await message.channel.send("Now playing audio from:    " + mesg)
+        await message.channel.send("Now playing audio:    " + mesg)
         await ThreeDog.client.change_presence(status=discord.Status.online, activity=discord.Game(name='Galaxy News Radio'))
         t = threading.Thread(target=ThreeDog.play_thread_action, args=(ThreeDog, message))
         t.start()
@@ -238,7 +247,8 @@ class ThreeDog():
             source_file = ThreeDog.song_queue.dequeue_song()
             player = ytdlsource.YTDLSource.from_url_noasync(source_file, stream=True)
             ThreeDog.vc.play(player, after=lambda e: print("Finished playing song."))
-            
+            print("Playing song: " + source_file)
+            ThreeDog.current_song = source_file
             
             while ThreeDog.vc.is_playing():
                     time.sleep(1)
@@ -251,7 +261,7 @@ class ThreeDog():
         ThreeDog.stop_playing = True
         if ThreeDog.vc is  not None:
             ThreeDog.vc.stop()
-            #await message.channel.send("Stopping the current song.")
+            await message.channel.send("Stopping the current song.")
             ThreeDog.radio_on = False
 
             await ThreeDog.client.change_presence(status=discord.Status.idle, activity=None)
@@ -267,19 +277,30 @@ class ThreeDog():
                 
     #Method for logging the bot client out.
     async def logout_action(message):
-        print("Logging off")
-        await ThreeDog.bot.close()
-        await ThreeDog.client.close()
+        if str(message.author) == 'Darict#4089':
+            print("Logging off")
+            await ThreeDog.bot.close()
+            await ThreeDog.client.close()
+        else:
+            await message.channel.send("I can't let you do that " + str(message.author))
 
     async def queue_action(message):
         queue = ThreeDog.song_queue.get_queue()
+        if queue is None:
+            await message.channel.send("No songs in the queue.")
+            return
         queue_output = '\n'
+        song_order = 1
         for song in queue:
-            queue_output = queue_output + song + '\n'
+            queue_output = queue_output + str(song_order) + ': ' + song + '\n'
+            song_order += 1
         await message.channel.send("Current songs in queue:    " + queue_output)
     async def clear_queue_action(message):
-        ThreeDog.song_queue.clear_queue()
-        await message.channel.send("Queue has been cleared.")
+        if str(message.author) == 'Darict#4089':
+            ThreeDog.song_queue.clear_queue()
+            await message.channel.send("Queue has been cleared.")
+        else:
+            await message.channel.send("I can't let you do that " + str(message.author))
 
     async def help_action(message):
         if ThreeDog.vc is  not None:
