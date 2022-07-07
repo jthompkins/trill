@@ -1,0 +1,6 @@
+discord>=v1.7.3-final
+mutagen>=-1.45.1
+youtube_dl>=2021.12.17
+bs4
+PyNaCl
+ffmpeg>=1.4
