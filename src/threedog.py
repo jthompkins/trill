@@ -199,7 +199,7 @@ class ThreeDog():
     #Method for Three Dog to play a song.
     async def play_action(message):
 
-        channel = message.author.voice.channel
+        
         mesg = message.content[len(ThreeDog.bot.command_prefix):].split('play', 1)[1]
         if mesg is not '':
           ThreeDog.song_queue.enqueue_song(mesg)
@@ -208,6 +208,7 @@ class ThreeDog():
           return
         else:
           pass
+        channel = message.author.voice.channel
         
         if ThreeDog.vc is not None and ThreeDog.vc.is_playing():
             await message.channel.send("Song added to queue: " + mesg)

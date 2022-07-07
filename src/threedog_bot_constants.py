@@ -17,7 +17,7 @@ THREEDOG_CODE = os.getenv("THREEDOGCODE")
 
 HELP_MESSAGE = 'List of available commands:'\
 				'\n$music - list available songs'\
-				'\n!play <song name> - play a song'\
+				'\n!play <song name> or <youtube url> - play a song'\
 				'\n!playing - print the song that is currently playing'\
 				'\n!radio <playlist> - Plays a playlist as if it was on the radio'\
 				'\n!stop - stop the player'\
@@ -25,4 +25,6 @@ HELP_MESSAGE = 'List of available commands:'\
 				'\n!resume - resume the player'\
 				'\n!shuffle - play a shuffled playlist'\
 				'\n!next - play the next song in the playlist'\
+				'\n!queue - show the songs currently in the queue'\
+				'\n!clearqueue - remove all songs from the queue'\
 				'\n!help - print this message'
