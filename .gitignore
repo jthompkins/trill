@@ -1,1 +1,5 @@
+run.sh
+songs/fallout
 voicelines
+src/__pycache__
+nohup.out
