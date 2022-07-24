@@ -4,3 +4,4 @@ youtube_dl>=2021.12.17
 bs4
 PyNaCl
 ffmpeg>=1.4
+psycopg2
