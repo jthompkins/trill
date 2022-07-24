@@ -7,22 +7,22 @@ RUN dnf install -y \
     && python3 -m ensurepip --default-pip \
     && python3 -m pip install youtube_dl \
     && python3 -m pip install -U discord.py[voice] \
-    && mkdir -p /usr/threedogbot/ \
+    && mkdir -p /usr/trillbot/ \
 
-WORKDIR /usr/threedogbot
+WORKDIR /usr/trillbot
 
-COPY ./threedog.py ./threedog_bot_constants.py records sounds voicelines /usr/threedogbot/
+COPY ./trill.py ./trill_bot_constants.py records sounds voicelines /usr/trillbot/
 
 #To be combined with the above run commands. This is for testing only
 RUN python3 -m pip install mutagen \
     && python3 -m pip install bs4
 
 
-RUN chgrp -R 0 /usr/threedogbot/ \
-    && chmod -R g=u /usr/threedogbot/ 
+RUN chgrp -R 0 /usr/trillbot/ \
+    && chmod -R g=u /usr/trillbot/ 
 
 
 
 USER 1001
 
-CMD ["python3","/usr/threedogbot/src/__main__.py"]
+CMD ["python3","/usr/trillbot/src/__main__.py"]
