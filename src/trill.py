@@ -47,7 +47,9 @@ class Trill():
         print("Retrieving code from environment variable TRILLCODE")
         self.trill_code = trill_bot_constants.TRILL_CODE
         if trill_bot_constants.VOICELINES_DIR is not None:
-            self.VOICELINES_DIR = trill_bot_constants.VOICELINES_DIR
+            Trill.VOICELINES_DIR = trill_bot_constants.VOICELINES_DIR
+        else:
+            Trill.VOICELINES_DIR = './voicelines'
         if self.trill_code is None:
             sys.exit("No bot code was defined for Trill. This OAuth code (TRILL_CODE) needs to be set as an environment variable.")
  
