@@ -28,7 +28,7 @@ import ytdlsource
 class Trill():
 
     #Command prefix. Messages in discord that start with this character will be recognized by Trill.
-    COMMAND_PREFIX = "$"
+    COMMAND_PREFIX = "!"
     ROOT_DIR = "."
     RECORDS_DIR = ROOT_DIR + "/songs/"
     SONGS_DIR = ROOT_DIR + "/songs/"
