@@ -23,7 +23,7 @@ DATABASE_USER = os.getenv("DATABASE_USER")
 DATABASE_PASS = os.getenv("DATABASE_PASS")
 
 HELP_MESSAGE = 'List of available commands:'\
-				'\n$music - list available songs'\
+				'\n!music - list available songs'\
 				'\n!play <song name> or <youtube url> - play a song'\
 				'\n!playing - print the song that is currently playing'\
 				'\n!radio <playlist> - Plays a playlist as if it was on the radio'\
