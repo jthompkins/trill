@@ -13,7 +13,7 @@ YOUTUBE_SEARCH = "https://www.youtube.com/results?search_query="
 NO_VOICE_CHANNEL = 'You are not in the voice channel!'
 
 #User has to obtain this authentication code from Discord. Set as environment variable
-TRILL_CODE = os.getenv("TRILLCODE")
+TRILL_CODE = os.getenv("TRILL_CODE")
 
 VOICELINES_DIR = os.getenv("VOICELINES_DIR")
 
