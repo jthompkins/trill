@@ -33,7 +33,9 @@ class Trill():
     RECORDS_DIR = ROOT_DIR + "/songs/"
     SONGS_DIR = ROOT_DIR + "/songs/"
     
-    client = discord.Client()
+    intents = discord.Intents.all()
+    
+    client = discord.Client(intents=intents)
     bot = Bot(command_prefix = COMMAND_PREFIX)
     vc = None
     song_queue = SongQueue()
@@ -310,8 +312,7 @@ class Trill():
             await message.channel.send("I can't let you do that " + str(message.author))
 
     async def help_action(message):
-        if Trill.vc is  not None:
-            await message.channel.send(trill_bot_constants.HELP_MESSAGE) 
+        await message.channel.send(trill_bot_constants.HELP_MESSAGE) 
         
         
     #Returns a random item in the provided directory
